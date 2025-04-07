@@ -23,22 +23,6 @@ void init_wp_pool() {
   used_next = 0;
 }
 
-/* TODO: Implement the functionality of watchpoint */
-void print_wp() {
-  if (head == NULL) {
-    printf("No watchpoint now\n");
-    return;
-  }
-  printf("Watchpoints:\n");
-  printf("NO.   hitTimes           expr \n");
-  wptemp = head;
-  while (wptemp) {
-    printf("%d     %d         %s\n", wptemp->NO, wptemp->hitNum,wptemp->e);
-    wptemp = wptemp->next;
-  }
-}
-
-
 bool new_wp(char *args) {
   if (free_ == NULL)
     assert(0);
@@ -101,6 +85,20 @@ bool free_wp(int num) {
   return false;
 }
 
+void print_wp() {
+  if (head == NULL) {
+    printf("No watchpoint now\n");
+    return;
+  }
+  printf("Watchpoints:\n");
+  printf("NO.   expr            hitTimes\n");
+  wptemp = head;
+  while (wptemp) {
+    printf("%d     %s          %d\n", wptemp->NO, wptemp->e, wptemp->hitNum);
+    wptemp = wptemp->next;
+  }
+}
+
 bool watch_wp() {
   bool success;
   int rst;
@@ -121,3 +119,5 @@ bool watch_wp() {
   }
   return true;
 }
+
+

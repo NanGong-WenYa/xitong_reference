@@ -39,7 +39,7 @@ static int cmd_q(char *args) {
 static int cmd_si(char *args) {
   uint64_t N = 1;
   if (args != NULL) {
-    if (sscanf(args, "%llu", &N) <= 0) {
+    if (sscanf(args, "%lu", &N) <= 0) {
       printf("Invalid arguement.\n");
       return 0;
     }
@@ -48,64 +48,35 @@ static int cmd_si(char *args) {
   return 0;
 }
 
-
-
 static int cmd_info(char *args) {
   char c;
   if (args == NULL) {
-    printf("arg error in cmd_info.\n");
+    printf("Invalid arguement.\n");
     return 0;
   }
   if (sscanf(args, "%c", &c) <= 0) {
-    printf("arg error in cmd_info.\n");
+    printf("Invalid arguement.\n");
     return 0;
   }
 
   if (c == 'r') {
-    
+    // DWORD
     for (int i=0; i<8; i++)
       printf("%s   0x%x\n", regsl[i], reg_l(i));
     printf("eip   0x%x\n", cpu.eip);
+    // WORD
     for (int i=0; i<8; i++)
       printf("%s    0x%x\n", regsw[i], reg_w(i));
+    // BYTE
     for (int i=0; i<8; i++)
       printf("%s    0x%x\n", regsb[i], reg_b(i));
   } else if (c == 'w') {
     print_wp();
   } else {
-    printf("arg error in cmd_info.\n");
+    printf("Invalid arguement.\n");
   }
   return 0;
 }
-
-
-static int cmd_x(char *args) {
-  //printf("this is args %s\n",args);
-  int n = 0;
-  vaddr_t addr;
-  char* exprStr = strtok(NULL, " ");
-  sscanf(exprStr,"%d",&n);
-  //printf("%d\n",n);
-  exprStr = strtok(NULL, " ");
-  //printf("this is expr %s\n",exprStr);
-
-  bool success;
-  addr = expr(exprStr, &success);
-  //printf("%i\n",addr);
- 
-  printf("Scan Memory:");
-  for (int i = 0; i < n; i++) {
-    if (i % 4 == 0) {
-      printf("\n0x%x: ", addr + i);
-    }
-      printf(" 0x%02x", vaddr_read(addr + i, 1));
-  }
-  printf("\n");
-
-  return 0;
-}
-
-
 
 static int cmd_p(char *args) {
   bool b;
@@ -119,7 +90,38 @@ static int cmd_p(char *args) {
   return 0;
 }
 
+static int cmd_x(char *args) {
+  int n = 0;
+  vaddr_t addr;
+  char* nRetStr = strtok(args, " ");
+  char* exprStr = strtok(NULL, " ");
 
+  if (args == NULL) {
+    printf("Invalid arguement.\n");
+    return 0;
+  }
+  if (sscanf(args, "%d 0x%x", &n, &addr) <= 0) {
+    printf("Invalid arguement.\n");
+    return 0;
+  }
+
+  bool b;
+  addr = expr(exprStr, &b);
+  if (!b) {
+    printf("Syntax error.\n");
+    return 0;
+  }
+  printf("Memory:");
+  for (int i=0; i<n; i++) {
+    if (i%4)
+      printf("  0x%02x", vaddr_read(addr+i, 1));
+    else
+      printf("\n0x%x:  0x%02x", addr+i, vaddr_read(addr+i, 1));
+  }
+  printf("\n");
+
+  return 0;
+}
 
 static int cmd_w(char *args) {
   new_wp(args);
@@ -140,7 +142,6 @@ static int cmd_d(char *args) {
   return 0;
 }
 
-
 static int cmd_help(char *args);
 
 static struct {
@@ -151,13 +152,12 @@ static struct {
   { "help", "Display informations about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-   { "si", "si N:Execute N steps(default step is 1)", cmd_si },
-   { "info", "info r/w:Print information of regs or watchpoints", cmd_info },
-     { "x", "x N EXPR:Scan the memory ", cmd_x },
-     { "p", " p EXPR:Compute the value of expression", cmd_p },
-       { "w", "w EXPR:Set watchpoint", cmd_w },
-  { "d", "d N:Delete watchpoint No.N ", cmd_d },
-  /* TODO: Add more commands */
+  { "si", "Execute N steps, usage: si N", cmd_si },
+  { "info", "Print registers or watchpoints, usage: info r/w", cmd_info },
+  { "p", "Compute the value of expression, usage: p EXPR", cmd_p },
+  { "x", "Scan the memory, usage: x N EXPR", cmd_x },
+  { "w", "Set watchpoint, usage: w EXPR", cmd_w },
+  { "d", "Delete watchpoint No.N, usage: d N", cmd_d },
 
 };
 
